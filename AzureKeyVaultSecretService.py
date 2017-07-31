@@ -2,6 +2,9 @@ import requests
 import json
 from azure.common.credentials import ServicePrincipalCredentials
 from azure.mgmt.keyvault import KeyVaultManagementClient
+import os
+import sys
+
 
 # Get a secret from an azure key vault
 # Takes 2 parameters and 1 optional parameter
@@ -11,8 +14,8 @@ from azure.mgmt.keyvault import KeyVaultManagementClient
 def getSecret(vault_name, secret_name, secret_version = ''):
     #Get acess token to azure account
     data = { "grant_type" : "client_credentials", 
-            "os.environ['AZURE_CLIENT_ID']" : os.environ['AZURE_CLIENT_ID'], 
-            "os.environ['AZURE_CLIENT_SECRET']" : os.environ['AZURE_CLIENT_SECRET'], 
+            "client_id" : os.environ['AZURE_CLIENT_ID'], 
+            "client_secret" : os.environ['AZURE_CLIENT_SECRET'], 
             "resource" : "https://vault.azure.net"
         }
     headers = { "Content-Type" : "application/x-www-form-urlencoded" }
@@ -33,7 +36,7 @@ def getSecret(vault_name, secret_name, secret_version = ''):
 # secret_version : Optional parameter to retrieve a specific version of a key if not provided will return latest version
 def searchSecret(secret_name, secret_version = ''):
     credentials = ServicePrincipalCredentials(
-        os.environ['AZURE_CLIENT_ID']= os.environ['AZURE_CLIENT_ID'],
+        client_id= os.environ['AZURE_CLIENT_ID'],
         secret= os.environ['AZURE_CLIENT_SECRET'],
         tenant= os.environ['AZURE_TENANT_ID']
     )
@@ -47,11 +50,12 @@ def searchSecret(secret_name, secret_version = ''):
     return 'Secret Not Found'
 
 if __name__ == "__main__":
-    def process_command(x):
-        default_msg = 'Welcome to the keyvault manager api you can choose to get a secret from a vault using Get_Secret {Vault_Name} {Secret_Name} or search all vaults for a secret using Search_Secret {Secret_Name}'
-        return {
-            'Get_Secret': getSecret(sys.argv[1], sys.argv[2]),
-            'Search_Secret': searchSecret(sys.argv[1])
-        }.get(x, print(default_msg))    
-
-    process_command(sys.argv[0])
+    msg = 'Welcome to the keyvault manager api you can choose to get a secret from a vault using python AzureKeyVaultSecretService.py Get_Secret {Vault_Name} {Secret_Name} or search all vaults for a secret with python AzureKeyVaultSecretService.py Search_Secret {Secret_Name}'    
+    try:
+        if (sys.argv[1] == 'Get_Secret'):
+            msg = getSecret(sys.argv[2], sys.argv[3])
+        if (sys.argv[1] == 'Search_Secret'):
+            msg = searchSecret(sys.argv[2])
+        print(msg)
+    except:
+        print(msg)
